@@ -1,0 +1,4 @@
+A FUSE filesystem based on Python to cache files from a bigger more 
+power consuming host. If a file is not cached by the local host it
+wakes the bigger host via Wake-On-LAN and gets the file via rsync and
+caches it for a while.
