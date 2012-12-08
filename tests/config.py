@@ -1,0 +1,45 @@
+import wakefs.config
+import os
+import unittest
+import random
+import string
+
+def random_str(N):
+    ''.join(random.choice(string.ascii_uppercase + string.digits + string.ascii_lowercase) for x in range(N))
+
+class TestConfigFileCreate(unittest.TestCase):
+    def test_file_create(self):
+        testfile = "test.cfg"
+        config = wakefs.config.Config(testfile)
+        config.close()
+        self.assertTrue(os.path.exists(testfile))
+        os.remove(testfile)
+
+class TestConfigAttributes(unittest.TestCase):
+    def setUp(self):
+        self.testfile = "test.cfg"
+        self.config = wakefs.config.Config(self.testfile)
+    
+    def test_get_attribute(self):
+        self.config.database_uri
+
+    def test_get_wrong_attribute(self):
+        with self.assertRaises(AttributeError):
+            self.config.detabase_uri
+
+    def test_set_attribute(self):
+        teststr = random_str(random.randint(5,20))
+        self.config.test = teststr
+        self.assertTrue(self.config.test == teststr)
+
+    def test_del_attribute(self):
+        teststr = random_str(random.randint(5,20))
+        self.config.test = teststr
+        self.assertTrue(self.config.test == teststr)
+        del self.config.test
+        with self.assertRaises(AttributeError):
+            self.config.test
+
+    def tearDown(self):
+        self.config.close()
+        os.remove(self.testfile)
