@@ -1,0 +1,47 @@
+from sqlobject import *
+from sqlobject.inheritance import *
+from sqlobject.views import *
+from wakefs.config import Config
+
+import os
+
+def initialise():
+    c = Config()
+    connection = connectionForURI(c.database_uri)
+    sqlhub.processConnection = connection
+    INode.createTable(ifNotExists=True)
+    Directory.createTable(ifNotExists=True)
+    File.createTable(ifNotExists=True)
+    root = Directory.selectBy(name="/")
+    if root.count() == 0:
+        return Directory(id=1,name="/",directory=None,crc=0)
+    else:
+        return root[0]
+
+class INode(InheritableSQLObject):
+    crc = IntCol(notNone=True)
+    directory = ForeignKey('Directory',default=1)
+    name = StringCol(notNone=True,unique=True)
+    location = StringCol(default=None)
+    
+    crcIndex = DatabaseIndex('crc')
+    nameIndex = DatabaseIndex('name')
+    
+    def _init(self, *args, **kwargs):
+        InheritableSQLObject._init(self, *args, **kwargs)
+        if self.name != '/' and self.directory == None:
+            raise ValueError('Directory may not be None if INode is not root.')
+
+    def _set_name(self, value):
+        if self.directory != None:
+            if os.path.dirname(value).strip('/') != self.directory.name.strip('/'):
+                value = os.path.join(self.directory.name,value)
+        else:
+            value = os.path.join('/',value)
+        self._SO_set_name(value)
+    
+class Directory(INode):
+    content = MultipleJoin('INode')
+
+class File(INode):
+    pass
