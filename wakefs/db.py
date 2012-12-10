@@ -2,6 +2,7 @@ from sqlobject import *
 from sqlobject.inheritance import *
 from sqlobject.views import *
 from wakefs.config import Config
+import wakefs.utils
 
 import os
 
@@ -18,7 +19,8 @@ def initialise(fs_connection):
         File.createTable(ifNotExists=True)
     root = Directory.selectBy(name="/")
     if root.count() == 0:
-        return Directory(id=1,name="/",directory=None,crc=0)
+        stats = wakefs.utils.get_stats("/", fs_connection)
+        return Directory(id=1, name="/", directory=None, **stats)
     else:
         return root[0]
 
@@ -27,6 +29,15 @@ class INode(InheritableSQLObject):
     directory = ForeignKey('Directory',default=1)
     name = StringCol(notNone=True,unique=True)
     location = StringCol(default=None)
+    st_mode = IntCol(notNone=True)
+    st_ino = IntCol(notNone=True)
+    st_dev = IntCol(notNone=True)
+    st_nlink = IntCol(notNone=True)
+    st_uid = IntCol(notNone=True)
+    st_gid = IntCol(notNone=True)
+    st_atime = IntCol(notNone=True)
+    st_mtime = IntCol(notNone=True)
+    st_ctime = IntCol(notNone=True)
     
     crcIndex = DatabaseIndex('crc')
     nameIndex = DatabaseIndex('name')
