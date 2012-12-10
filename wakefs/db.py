@@ -31,12 +31,9 @@ class INode(InheritableSQLObject):
     crcIndex = DatabaseIndex('crc')
     nameIndex = DatabaseIndex('name')
     
-    def _init(self, *args, **kwargs):
-        InheritableSQLObject._init(self, *args, **kwargs)
-        if self.name != '/' and self.directory == None:
-            raise ValueError('Directory may not be None if INode is not root.')
-
     def _set_name(self, value):
+        if value != '/' and self.directory == None:
+            raise IntegrityError('directory may not be %s if INode is not %s.' % (repr(self.directory), repr(value)))
         if self.directory != None:
             if os.path.dirname(value).strip('/') != self.directory.name.strip('/'):
                 value = os.path.join(self.directory.name,value)
