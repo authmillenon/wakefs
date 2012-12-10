@@ -35,7 +35,7 @@ class INode(InheritableSQLObject):
         if value != '/' and self.directory == None:
             raise IntegrityError('directory may not be %s if INode is not %s.' % (repr(self.directory), repr(value)))
         if self.directory != None:
-            if os.path.dirname(value).strip('/') != self.directory.name.strip('/'):
+            if os.path.dirname(value).strip('/') != self.directory.name.strip('/') or value[0] != '/':
                 value = os.path.join(self.directory.name,value)
         else:
             value = os.path.join('/',value)
