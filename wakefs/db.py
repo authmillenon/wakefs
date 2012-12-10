@@ -40,7 +40,16 @@ class INode(InheritableSQLObject):
         else:
             value = os.path.join('/',value)
         self._SO_set_name(value)
-    
+
+    def __unicode__(self):
+        return self.name
+
+    def __str__(self):
+        return str(unicode(self))
+
+    def __repr__(self):
+        return unicode(self)
+
 class Directory(INode):
     content = MultipleJoin('INode')
 
