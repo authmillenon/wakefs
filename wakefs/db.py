@@ -5,13 +5,17 @@ from wakefs.config import Config
 
 import os
 
-def initialise():
-    c = Config()
-    connection = connectionForURI(c.database_uri)
-    sqlhub.processConnection = connection
-    INode.createTable(ifNotExists=True)
-    Directory.createTable(ifNotExists=True)
-    File.createTable(ifNotExists=True)
+_db_connection = None
+
+def initialise(fs_connection):
+    global _db_connection
+    if _db_connection == None:
+        c = Config()
+        _db_connection = connectionForURI(c.database_uri)
+        sqlhub.processConnection = _db_connection
+        INode.createTable(ifNotExists=True)
+        Directory.createTable(ifNotExists=True)
+        File.createTable(ifNotExists=True)
     root = Directory.selectBy(name="/")
     if root.count() == 0:
         return Directory(id=1,name="/",directory=None,crc=0)
