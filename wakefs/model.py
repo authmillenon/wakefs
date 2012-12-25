@@ -6,29 +6,43 @@ import wakefs.utils
 import wakefs.conn
 
 class Stats(object):
-    valid_attributes = {
+    _valid_attributes = {
             'st_mode', 'st_ino', 'st_dev', 'st_nlink', 'st_uid',
             'st_gid', 'st_rdev', 'st_size', 'st_blksize', 'st_blocks',
             'st_atime', 'st_mtime', 'st_ctime'
         }
 
-    def __init__(self, **stat):
-        if set(stat.keys()) == Stats.valid_attributes:
-            self.stat = stat
+    def __init__(self, dbobject):
+        self._dbobject = dbobject
+
+    def __get_db_col(self, colname):
+        if self._dbobject:
+            return getattr(self._dbobject, colname)
         else:
-            raise ValueError("Parameters %s wrong" %
-                    str(tuple(Stats.valid_attributes ^ set(stat.keys()))))
+            raise AttributeError("Object was deleted")
+
+    def __set_db_col(self, colname, value):
+        if self._dbobject:
+            setattr(self._dbobject, colname, value)
+        else:
+            raise AttributeError("Object was deleted")
 
     def __getattribute__(self, name):
-        if name in Stats.valid_attributes:
-            return self.stat[name]
+        if name in Stats._valid_attributes:
+            return self.__get_db_col(name)
         else:
             return object.__getattribute__(self,name)
 
+    def __setattr__(self, name, value):
+        if name in Stats._valid_attributes:
+            self.__set_db_col(name, value)
+        else:
+            return object.__setattr__(self,name,value)
+
     def __repr__(self):
         repr = "Stats("
-        for a in Stats.valid_attributes:
-            repr += a + '=' + str(self.stat[a]) + ','
+        for a in Stats._valid_attributes:
+            repr += a + '=' + str(getattr(self,a)) + ','
         return repr[:-1] + ")"
 
 class File(object):
@@ -79,21 +93,7 @@ class File(object):
 
     @property
     def stat(self):
-        return Stats(
-                self.__get_db_col('st_mode'),
-                self.__get_db_col('st_ino'),
-                self.__get_db_col('st_dev'),
-                self.__get_db_col('st_nlink'),
-                self.__get_db_col('st_uid'),
-                self.__get_db_col('st_gid'),
-                self.__get_db_col('st_rdev'),
-                self.__get_db_col('st_size'),
-                self.__get_db_col('st_blksize'),
-                self.__get_db_col('st_blocks'),
-                self.__get_db_col('st_atime'),
-                self.__get_db_col('st_mtime'),
-                self.__get_db_col('st_ctime'),
-            )
+        return Stats(self._dbobject)
 
     def __unicode__(self):
         return self.name
