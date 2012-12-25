@@ -15,15 +15,10 @@ class IsDirectoryError(Exception):
 class IsFileError(Exception):
     pass
 
-class Stats(object):
-    _valid_attributes = {
-            'st_mode', 'st_ino', 'st_dev', 'st_nlink', 'st_uid',
-            'st_gid', 'st_rdev', 'st_size', 'st_blksize', 'st_blocks',
-            'st_atime', 'st_mtime', 'st_ctime'
-        }
-
-    def __init__(self, dbobject):
-        self._dbobject = dbobject
+class _DBConnectedObject(object):
+    def __init__(self):
+        self._dbobject = None
+        raise NotImplemented
 
     def __get_db_col(self, colname):
         if self._dbobject:
@@ -36,6 +31,16 @@ class Stats(object):
             setattr(self._dbobject, colname, value)
         else:
             raise AttributeError("Object was deleted")
+
+class Stats(_DBConnectedObject):
+    _valid_attributes = {
+            'st_mode', 'st_ino', 'st_dev', 'st_nlink', 'st_uid',
+            'st_gid', 'st_rdev', 'st_size', 'st_blksize', 'st_blocks',
+            'st_atime', 'st_mtime', 'st_ctime'
+        }
+
+    def __init__(self, dbobject):
+        self._dbobject = dbobject
 
     def __getattribute__(self, name):
         if name in Stats._valid_attributes:
@@ -55,7 +60,7 @@ class Stats(object):
             repr += a + '=' + str(getattr(self,a)) + ','
         return repr[:-1] + ")"
 
-class File(object):
+class File(_DBConnectedObject):
     def __new__(cls, name, *args, **kwargs):
         wakefs.db.initialise()
         try:
@@ -93,21 +98,6 @@ class File(object):
                    )
             except DuplicateEntryError:
                 self._dbobject = DBObjectClass.selectBy(name=name).getOne()
-
-    def __get_db_col(self, colname):
-        if self._dbobject:
-            return getattr(self._dbobject, colname)
-        else:
-            raise AttributeError("Object was deleted")
-
-    def __set_db_col(self, colname, value):
-        if self._dbobject:
-            setattr(self._dbobject, colname, value)
-        else:
-            raise AttributeError("Object was deleted")
-    
-    def __del__(self):
-        wakefs.db.INode.deleteBy(name=self.name)
 
     @property
     def crc(self):
@@ -156,7 +146,3 @@ class Directory(File):
     def content(self):
         for c in self.__get_db_col('content'):
             yield globals()[type(c).__name__](c.name,c.location)
-
-   def update(self):
-        for c in self.content:
-            c.update()
