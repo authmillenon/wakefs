@@ -1,9 +1,19 @@
 import os.path
 from sqlobject import SQLObjectNotFound
+from sqlobject.dberrors import DuplicateEntryError
 
 import wakefs.db
 import wakefs.utils
 import wakefs.conn
+
+def get_object(filename, location=None):
+    return File(filename, location)
+
+class IsDirectoryError(Exception):
+    pass
+
+class IsFileError(Exception):
+    pass
 
 class Stats(object):
     _valid_attributes = {
@@ -46,26 +56,43 @@ class Stats(object):
         return repr[:-1] + ")"
 
 class File(object):
-    def __init__(self, name, location=None):
+    def __new__(cls, name, *args, **kwargs):
         wakefs.db.initialise()
-        DBObjectClass = getattr(wakefs.db,type(self).__name__)
         try:
-            self._dbobject = DBObjectClass.selectBy(name=name).getOne()
+            db_obj = wakefs.db.INode.selectBy(name=name).getOne()
+            if type(db_obj).__name__ != cls.__name__:
+                return globals()[type(db_obj).__name__](name, db_obj, *args, **kwargs)
         except SQLObjectNotFound:
+            pass
+        return super(File, cls).__new__(cls, name, *args, **kwargs)
+
+    def __init__(self, name, db_obj=None, location=None, **kwargs):
+        DBObjectClass = getattr(wakefs.db,type(self).__name__)
+        self._connection = wakefs.conn.connection_factory()
+
+        if db_obj != None:
+            self._dbobject = db_obj
+        elif name == "/":
+            self._dbobject = wakefs.db.Directory.selectBy(name=name).getOne()
+        else:
             dirname = os.path.dirname(name) or "/"
             if dirname != "/" and wakefs.db.File.selectBy(name=dirname).count() > 0:
-                raise ValueError("'%s' is a file." % dirname)
+                raise IsFileError("'%s' is a file." % dirname)
             directory = Directory(
                     name=dirname,
                     location=location
                 )
             stats = wakefs.utils.get_stats(name, location)
-            self._dbobject = DBObjectClass(
-                    directory = directory._dbobject,
-                    location = location,
-                    name = name,
-                    **stats
-                )
+            try:
+                kwargs.update(stats)
+                self._dbobject = DBObjectClass(
+                        directory=directory._dbobject,
+                        location=location,
+                        name=name,
+                        **kwargs
+                   )
+            except DuplicateEntryError:
+                self._dbobject = DBObjectClass.selectBy(name=name).getOne()
 
     def __get_db_col(self, colname):
         if self._dbobject:
@@ -103,30 +130,13 @@ class File(object):
 
     def __repr__(self):
         return unicode(self)
-    
+
 class Link(File):
-    def __init__(self, name, target, location=None):
-        wakefs.db.initialise()
-        DBObjectClass = getattr(wakefs.db,type(self).__name__)
-        self._connection = wakefs.conn.connection_factory()
-        try:
-            self._dbobject = DBObjectClass.selectBy(name=name).getOne()
-        except SQLObjectNotFound:
-            dirname = os.path.dirname(name) or "/"
-            if dirname != "/" and wakefs.db.File.selectBy(name=dirname).count() > 0:
-                raise ValueError("'%s' is a file." % dirname)
-            directory = Directory(
-                    name=dirname,
-                    location=location
-                )
-            stats = wakefs.utils.get_stats(name, location)
-            self._dbobject = wakefs.db.DBObjectClass(
-                    directory = directory._dbobject,
-                    location = location,
-                    target = target,
-                    name = name,
-                    **stats
-                )
+    def __init__(self, name, db_obj=None, location=None, target=None):
+        if wakefs.db.Link.selectBy(name=name).count() == 0 and \
+                target == None:
+            raise ValueError("A link must have a target")
+        super(Link, self).__init__(name, db_obj, location, target=target)
 
     @property
     def target(self):
