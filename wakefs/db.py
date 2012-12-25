@@ -70,3 +70,9 @@ class Directory(INode):
 
 class File(INode):
     pass
+
+class Link(INode):
+    target = ForeignKey('INode',notNone=True)
+
+class SymLink(Link):
+    pass
