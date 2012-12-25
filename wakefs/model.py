@@ -129,7 +129,7 @@ class File(object):
         return str(unicode(self))
 
     def __repr__(self):
-        return unicode(self)
+        return u"<"+unicode(type(self).__name__)+u": "+unicode(self)+">"
 
 class Link(File):
     def __init__(self, name, db_obj=None, location=None, target=None):
