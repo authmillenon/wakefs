@@ -99,6 +99,9 @@ class File(_DBConnectedObject):
             except DuplicateEntryError:
                 self._dbobject = DBObjectClass.selectBy(name=name).getOne()
 
+    def remove(self):
+        wakefs.db.INode.deleteBy(name=self.name)
+
     @property
     def crc(self):
         return self.__get_db_col('crc')
