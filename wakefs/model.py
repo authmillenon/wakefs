@@ -124,6 +124,18 @@ class File(_DBConnectedObject):
     def __repr__(self):
         return u"<"+unicode(type(self).__name__)+u": "+unicode(self)+">"
 
+    def get_file_object(self, mode="r", buffering=None):
+        if 'r' in mode:
+            if self.location != None:
+                if buffering:
+                    return open(self.location, mode, buffering)
+                else:
+                    return open(self.location, mode)
+            else:
+                return self._connection.open_remote_file(self,mode)
+        if 'w' in mode or 'a' in mode or '+' in mode:
+            return self._cache.open_cache_file(self, mode, buffering)
+
     def update(self):
         return self._connection.update(self)
 
@@ -146,3 +158,6 @@ class Directory(File):
     def content(self):
         for c in self.__get_db_col('content'):
             yield globals()[type(c).__name__](c.name,c.location)
+
+    def get_file_object(self, mode="r", buffering=None):
+        raise IsDirectoryError("A directory can not be opened.")

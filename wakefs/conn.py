@@ -20,10 +20,19 @@ class Connection(object):
         if not '_connected' in dir(self):
             self._connected = True
 
+    def open(self, filename, mode="r", buffering=None):
+        raise NotImplemented
+
 class LocalConnection(Connection):
     def __init__(self, path):
         super(LocalConnection, self).__init__()
         self.path = path
+
+    def open(self, filename, mode="r", buffering=None):
+        if buffering:
+            return open(os.path.join(self.path, filename, mode, buffering))
+        else:
+            return open(os.path.join(self.path, filename, mode))
 
     def update(self, model_object):
         # TODO
