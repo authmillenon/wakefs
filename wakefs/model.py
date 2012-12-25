@@ -27,17 +27,29 @@ class File(object):
                     **stats
                 )
 
+    def __get_db_col(self, colname):
+        if self._dbobject:
+            return getattr(self._dbobject, colname)
+        else:
+            raise AttributeError("Object was deleted")
+
+    def __set_db_col(self, colname, value):
+        if self._dbobject:
+            setattr(self._dbobject, colname, value)
+        else:
+            raise AttributeError("Object was deleted")
+
     @property
     def crc(self):
-        return self._dbobject.crc
+        return self.__get_db_col('crc')
 
     @property
     def location(self):
-        return self._dbobject.location
+        return self.__get_db_col('location')
 
     @property
     def name(self):
-        return self._dbobject.name
+        return self.__get_db_col('name')
 
     def __unicode__(self):
         return self.name
@@ -51,4 +63,5 @@ class File(object):
 class Directory(File):
     @property
     def content(self):
-        return self._dbobject.content
+        for c in self.__get_db_col('content'):
+            yield globals()[type(c).__name__](c.name,c.location)
