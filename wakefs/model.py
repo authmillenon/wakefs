@@ -3,12 +3,12 @@ from sqlobject import SQLObjectNotFound
 
 import wakefs.db
 import wakefs.utils
+import wakefs.conn
 
 class File(object):
-    def __init__(self, connection, name, location=None):
-        wakefs.db.initialise(connection)
+    def __init__(self, name, location=None):
+        wakefs.db.initialise()
         DBObjectClass = getattr(wakefs.db,type(self).__name__)
-        self._connection = connection
         try:
             self._dbobject = DBObjectClass.selectBy(name=name).getOne()
         except SQLObjectNotFound:
@@ -16,11 +16,10 @@ class File(object):
             if dirname != "/" and wakefs.db.File.selectBy(name=dirname).count() > 0:
                 raise ValueError("'%s' is a file." % dirname)
             directory = Directory(
-                    connection=connection, 
                     name=dirname,
                     location=location
                 )
-            stats = wakefs.utils.get_stats(connection, name, location)
+            stats = wakefs.utils.get_stats(name, location)
             self._dbobject = DBObjectClass(
                     directory = directory._dbobject,
                     location = location,

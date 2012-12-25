@@ -8,7 +8,7 @@ import os
 
 _db_connection = None
 
-def initialise(fs_connection):
+def initialise():
     global _db_connection
     if _db_connection == None:
         c = Config()
@@ -19,7 +19,7 @@ def initialise(fs_connection):
         File.createTable(ifNotExists=True)
     root = Directory.selectBy(name="/")
     if root.count() == 0:
-        stats = wakefs.utils.get_stats("/", fs_connection)
+        stats = wakefs.utils.get_stats("/")
         return Directory(id=1, name="/", directory=None, **stats)
     else:
         return root[0]

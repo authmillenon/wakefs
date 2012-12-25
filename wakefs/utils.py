@@ -1,4 +1,7 @@
-def get_stats(name, connection, location=None):
+import wakefs.conn
+
+def get_stats(name, location=None):
+    fs_connection = wakefs.conn.connection_factory()
     return {               # get from connection or location
             'crc': 0,
             'st_mode': 0,
