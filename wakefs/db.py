@@ -17,6 +17,8 @@ def initialise():
         INode.createTable(ifNotExists=True)
         Directory.createTable(ifNotExists=True)
         File.createTable(ifNotExists=True)
+        Link.createTable(ifNotExists=True)
+        SymLink.createTable(ifNotExists=True)
     root = Directory.selectBy(name="/")
     if root.count() == 0:
         stats = wakefs.utils.get_stats("/")
