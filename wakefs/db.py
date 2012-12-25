@@ -26,7 +26,7 @@ def initialise(fs_connection):
 
 class INode(InheritableSQLObject):
     crc = IntCol(notNone=True)
-    directory = ForeignKey('Directory',default=1)
+    directory = ForeignKey('Directory',cascade=True,default=1)
     name = StringCol(notNone=True,unique=True)
     location = StringCol(default=None)
     st_mode = IntCol(notNone=True)
