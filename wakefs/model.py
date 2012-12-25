@@ -105,6 +105,9 @@ class File(object):
             setattr(self._dbobject, colname, value)
         else:
             raise AttributeError("Object was deleted")
+    
+    def __del__(self):
+        wakefs.db.INode.deleteBy(name=self.name)
 
     @property
     def crc(self):
@@ -131,6 +134,9 @@ class File(object):
     def __repr__(self):
         return u"<"+unicode(type(self).__name__)+u": "+unicode(self)+">"
 
+    def update(self):
+        return self._connection.update(self)
+
 class Link(File):
     def __init__(self, name, db_obj=None, location=None, target=None):
         if wakefs.db.Link.selectBy(name=name).count() == 0 and \
@@ -150,3 +156,7 @@ class Directory(File):
     def content(self):
         for c in self.__get_db_col('content'):
             yield globals()[type(c).__name__](c.name,c.location)
+
+   def update(self):
+        for c in self.content:
+            c.update()

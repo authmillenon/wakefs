@@ -24,3 +24,7 @@ class LocalConnection(Connection):
     def __init__(self, path):
         super(LocalConnection, self).__init__()
         self.path = path
+
+    def update(self, model_object):
+        # TODO
+        print 'Update:', repr(model_object)
