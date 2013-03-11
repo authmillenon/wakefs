@@ -25,12 +25,12 @@ class TestConfigAttributes(unittest.TestCase):
             self.config.detabase_uri
 
     def test_set_attribute(self):
-        teststr = rand_len_str
+        teststr = rand_len_str()
         self.config.test = teststr
         self.assertTrue(self.config.test == teststr)
 
     def test_del_attribute(self):
-        teststr = rand_len_str
+        teststr = rand_len_str()
         self.config.test = teststr
         self.assertTrue(self.config.test == teststr)
         del self.config.test

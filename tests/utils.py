@@ -28,6 +28,5 @@ def random_str(N):
             string.ascii_lowercase
         ) for x in range(N))
 
-@property
 def rand_len_str():
     return random_str(random.randint(5,20)) 
