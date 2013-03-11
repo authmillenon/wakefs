@@ -54,24 +54,27 @@ def initialise(database_uri=None):
     else:
         return root[0]
 
+class IntegrityError(Exception):
+    pass
+
 class File(InheritableSQLObject):
-    crc = IntCol(notNone=True)
+    crc = IntCol(default=None)
     directory = ForeignKey('Directory',cascade=True,default=1)
     name = StringCol(notNone=True,unique=True)
     location = StringCol(default=None)
-    st_mode = IntCol(notNone=True)
-    st_ino = IntCol(notNone=True)
-    st_dev = IntCol(notNone=True)
-    st_nlink = IntCol(notNone=True)
-    st_uid = IntCol(notNone=True)
-    st_gid = IntCol(notNone=True)
-    st_rdev = IntCol(notNone=True)
-    st_size = IntCol(notNone=True)
-    st_blksize = IntCol(notNone=True)
-    st_blocks = IntCol(notNone=True)
-    st_atime = IntCol(notNone=True)
-    st_mtime = IntCol(notNone=True)
-    st_ctime = IntCol(notNone=True)
+    st_mode = IntCol(default=None)
+    st_ino = IntCol(default=None)
+    st_dev = IntCol(default=None)
+    st_nlink = IntCol(default=None)
+    st_uid = IntCol(default=None)
+    st_gid = IntCol(default=None)
+    st_rdev = IntCol(default=None)
+    st_size = IntCol(default=None)
+    st_blksize = IntCol(default=None)
+    st_blocks = IntCol(default=None)
+    st_atime = IntCol(default=None)
+    st_mtime = IntCol(default=None)
+    st_ctime = IntCol(default=None)
     
     crcIndex = DatabaseIndex('crc')
     nameIndex = DatabaseIndex('name')
