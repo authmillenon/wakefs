@@ -85,7 +85,7 @@ class File(_DBConnectedObject):
     def __new__(cls, name, *args, **kwargs):
         wakefs.db.initialise()
         try:
-            db_obj = wakefs.db.INode.selectBy(name=name).getOne()
+            db_obj = wakefs.db.File.selectBy(name=name).getOne()
             if type(db_obj).__name__ != cls.__name__:
                 return globals()[type(db_obj).__name__](name, db_obj, *args, **kwargs)
         except SQLObjectNotFound:
@@ -121,7 +121,7 @@ class File(_DBConnectedObject):
                 self._dbobject = DBObjectClass.selectBy(name=name).getOne()
 
     def remove(self):
-        wakefs.db.INode.deleteBy(name=self.name)
+        wakefs.db.File.deleteBy(name=self.name)
 
     @property
     def crc(self):

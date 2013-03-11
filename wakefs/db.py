@@ -35,7 +35,7 @@ def initialise():
         config = Config()
         _db_connection = connectionForURI(config.database_uri)
         sqlhub.processConnection = _db_connection
-        INode.createTable(ifNotExists=True)
+        File.createTable(ifNotExists=True)
         Directory.createTable(ifNotExists=True)
         File.createTable(ifNotExists=True)
         Link.createTable(ifNotExists=True)
@@ -47,7 +47,7 @@ def initialise():
     else:
         return root[0]
 
-class INode(InheritableSQLObject):
+class File(InheritableSQLObject):
     crc = IntCol(notNone=True)
     directory = ForeignKey('Directory',cascade=True,default=1)
     name = StringCol(notNone=True,unique=True)
@@ -96,14 +96,11 @@ class INode(InheritableSQLObject):
     def __repr__(self):
         return unicode(self)
 
-class Directory(INode):
-    content = MultipleJoin('INode')
+class Directory(File):
+    content = MultipleJoin('File')
 
-class File(INode):
-    pass
-
-class Link(INode):
-    target = ForeignKey('INode',notNone=True)
+class Link(File):
+    target = ForeignKey('File',notNone=True)
 
 class SymLink(Link):
     pass
