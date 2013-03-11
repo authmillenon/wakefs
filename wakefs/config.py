@@ -42,7 +42,13 @@ class Config(object):
         else:
             if os.path.exists(Config._configfile):
                 self._parser.read(configfile)
-    
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        return self.close()
+
     def __getattribute__(self, name):
         if name == "_parser":
             return object.__getattribute__(self, name)
@@ -64,11 +70,10 @@ class Config(object):
             self._parser.remove_option("DEFAULT", "database_uri")
         else:
             object.__delattr__(self, name)
-    
+
     def close(self):
-        configfile = open(Config._configfile,'wb')
-        self._parser.write(configfile)
-        configfile.close()
+        with open(Config._configfile,'w') as configfile:
+            self._parser.write(configfile)
         Config._config = None
 
     def __del__(self):

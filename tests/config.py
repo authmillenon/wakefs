@@ -31,8 +31,8 @@ def random_str(N):
 class TestConfigFileCreate(unittest.TestCase):
     def test_file_create(self):
         testfile = "test.cfg"
-        config = wakefs.config.Config(testfile)
-        config.close()
+        with wakefs.config.Config(testfile) as config:
+            pass
         self.assertTrue(os.path.exists(testfile))
         os.remove(testfile)
 
