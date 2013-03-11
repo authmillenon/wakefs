@@ -20,3 +20,4 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 from tests.config import *
+from tests.db import *
