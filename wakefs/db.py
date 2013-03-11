@@ -34,6 +34,10 @@ def close():
     _db_connection.close()
     _db_connection = None
 
+def query(query_str):
+    global _db_connection
+    return _db_connection.queryAll(query_str)
+
 def initialise(database_uri=None):
     global _db_connection
     if _db_connection == None:
