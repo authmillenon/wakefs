@@ -29,6 +29,11 @@ import os
 
 _db_connection = None
 
+def close():
+    global _db_connection
+    _db_connection.close()
+    _db_connection = None
+
 def initialise():
     global _db_connection
     if _db_connection == None:
