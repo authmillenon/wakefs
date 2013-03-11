@@ -34,11 +34,13 @@ def close():
     _db_connection.close()
     _db_connection = None
 
-def initialise():
+def initialise(database_uri=None):
     global _db_connection
     if _db_connection == None:
-        config = Config()
-        _db_connection = connectionForURI(config.database_uri)
+        if database_uri == None:
+            with Config() as config:
+                database_uri = config.database_uri
+        _db_connection = connectionForURI(database_uri)
         sqlhub.processConnection = _db_connection
         File.createTable(ifNotExists=True)
         Directory.createTable(ifNotExists=True)
