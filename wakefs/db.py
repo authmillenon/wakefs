@@ -32,8 +32,8 @@ _db_connection = None
 def initialise():
     global _db_connection
     if _db_connection == None:
-        c = Config()
-        _db_connection = connectionForURI(c.database_uri)
+        config = Config()
+        _db_connection = connectionForURI(config.database_uri)
         sqlhub.processConnection = _db_connection
         INode.createTable(ifNotExists=True)
         Directory.createTable(ifNotExists=True)
@@ -71,9 +71,17 @@ class INode(InheritableSQLObject):
     
     def _set_name(self, value):
         if value != '/' and self.directory == None:
-            raise IntegrityError('directory may not be %s if INode is not %s.' % (repr(self.directory), repr(value)))
+            raise IntegrityError(
+                    'directory may not be {} if {} is not {}.'.\
+                            format(
+                                    repr(self.directory),
+                                    type(self).__name__,
+                                    repr(value)
+                                )
+                )
         if self.directory != None:
-            if os.path.dirname(value).strip('/') != self.directory.name.strip('/') or value[0] != '/':
+            if os.path.dirname(value).strip('/') != \
+                    self.directory.name.strip('/') or value[0] != '/':
                 value = os.path.join(self.directory.name,value)
         else:
             value = os.path.join('/',value)

@@ -57,7 +57,7 @@ class LocalConnection(Connection):
 
     def update(self, model_object):
         # TODO
-        print 'Update:', repr(model_object)
+        print('Update:', repr(model_object))
 
 class NetConnection(Connection):
     def __init__(self, host, mac, port, path):
