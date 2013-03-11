@@ -114,7 +114,7 @@ class Directory(File):
     content = MultipleJoin('File')
 
 class Link(File):
-    target = ForeignKey('File',notNone=True)
+    target = StringCol()
 
 class SymLink(Link):
     pass
