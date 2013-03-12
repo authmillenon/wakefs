@@ -36,6 +36,9 @@ class IsDirectoryError(Exception):
 class IsFileError(Exception):
     pass
 
+class FileDoesNotExist(Exception):
+    pass
+
 class _DBConnectedObject(object):
     def __init__(self):
         self._dbobject = None
@@ -45,13 +48,13 @@ class _DBConnectedObject(object):
         if self._dbobject:
             return getattr(self._dbobject, colname)
         else:
-            raise AttributeError("Object was deleted")
+            raise ValueError("Object was deleted")
 
     def _set_db_col(self, colname, value):
         if self._dbobject:
             setattr(self._dbobject, colname, value)
         else:
-            raise AttributeError("Object was deleted")
+            raise ValueError("Object was deleted")
 
 class Stats(_DBConnectedObject):
     _valid_attributes = {
@@ -99,7 +102,8 @@ class File(_DBConnectedObject):
         if db_obj != None:
             self._dbobject = db_obj
         elif name == "/":
-            self._dbobject = wakefs.db.Directory.selectBy(name=name).getOne()
+            self._dbobject = wakefs.db.Directory.selectBy(name=name).\
+                    getOne()
         else:
             dirname = os.path.dirname(name) or "/"
             if dirname != "/" and wakefs.db.File.selectBy(name=dirname).count() > 0:
@@ -123,7 +127,16 @@ class File(_DBConnectedObject):
     def remove(self):
         wakefs.db.File.deleteBy(name=self.name)
 
+    @staticmethod
+    def exists(name):
+        return wakefs.db.File.selectBy(name=name).count() > 0
 
+    @staticmethod
+    def get(name):
+        try:
+            return wakefs.db.File.selectBy(name=name).getOne()
+        except SQLObjectNotFound, e:
+            raise FileDoesNotExist(e)
 
     def __getattribute__(self, name):
         if name == 'stat':
