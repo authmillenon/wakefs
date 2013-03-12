@@ -41,13 +41,13 @@ class _DBConnectedObject(object):
         self._dbobject = None
         raise NotImplemented
 
-    def __get_db_col(self, colname):
+    def _get_db_col(self, colname):
         if self._dbobject:
             return getattr(self._dbobject, colname)
         else:
             raise AttributeError("Object was deleted")
 
-    def __set_db_col(self, colname, value):
+    def _set_db_col(self, colname, value):
         if self._dbobject:
             setattr(self._dbobject, colname, value)
         else:
@@ -65,13 +65,13 @@ class Stats(_DBConnectedObject):
 
     def __getattribute__(self, name):
         if name in Stats._valid_attributes:
-            return self.__get_db_col(name)
+            return self._get_db_col(name)
         else:
             return object.__getattribute__(self,name)
 
     def __setattr__(self, name, value):
         if name in Stats._valid_attributes:
-            self.__set_db_col(name, value)
+            self._set_db_col(name, value)
         else:
             return object.__setattr__(self,name,value)
 
@@ -123,21 +123,15 @@ class File(_DBConnectedObject):
     def remove(self):
         wakefs.db.File.deleteBy(name=self.name)
 
-    @property
-    def crc(self):
-        return self.__get_db_col('crc')
 
-    @property
-    def location(self):
-        return self.__get_db_col('location')
 
-    @property
-    def name(self):
-        return self.__get_db_col('name')
-
-    @property
-    def stat(self):
-        return Stats(self._dbobject)
+    def __getattribute__(self, name):
+        if name == 'stat':
+            return Stats(self._dbobject)
+        elif name in ['crc','location','name']:
+            return self._get_db_col(name)
+        else:
+            return _DBConnectedObject.__getattribute__(self,name)
 
     def __unicode__(self):
         return self.name
@@ -146,42 +140,42 @@ class File(_DBConnectedObject):
         return str(unicode(self))
 
     def __repr__(self):
-        return u"<"+unicode(type(self).__name__)+u": "+unicode(self)+">"
-
-    def get_file_object(self, mode="r", buffering=None):
-        if 'r' in mode:
-            if self.location != None:
-                if buffering:
-                    return open(self.location, mode, buffering)
-                else:
-                    return open(self.location, mode)
-            else:
-                return self._connection.open_remote_file(self,mode)
-        if 'w' in mode or 'a' in mode or '+' in mode:
-            return self._cache.open_cache_file(self, mode, buffering)
-
-    def update(self):
-        return self._connection.update(self)
+        return u"<"+unicode(type(self).__name__)+u": "+unicode(self)+u">"
 
 class Link(File):
-    def __init__(self, name, db_obj=None, location=None, target=None):
-        if wakefs.db.Link.selectBy(name=name).count() == 0 and \
-                target == None:
-            raise ValueError("A link must have a target")
-        super(Link, self).__init__(name, db_obj, location, target=target)
+    def __init__(self, name, db_obj=None, location=None, target=None,
+            **kwargs):
+        super(Link, self).__init__(
+                name,
+                db_obj,
+                location,
+                target=target,
+                **kwargs
+            )
 
-    @property
-    def target(self):
-        return self.target
+    def __getattribute__(self, name):
+        if name == 'target':
+            return self._get_db_col(name)
+        else:
+            return File.__getattribute__(self,name)
 
 class SymLink(Link):
     pass
 
 class Directory(File):
-    @property
+    class _content(object):
+        def __init__(self, directory):
+            self.directory = directory
+
+        def __iter__(self):
+            for c in self.directory._get_db_col('content'):
+                yield globals()[type(c).__name__](c.name,c.location)
+
+        def __len__(self):
+            return len(self.directory._get_db_col('content'))
+
     def content(self):
-        for c in self.__get_db_col('content'):
-            yield globals()[type(c).__name__](c.name,c.location)
+        return Directory._content(self)
 
     def get_file_object(self, mode="r", buffering=None):
         raise IsDirectoryError("A directory can not be opened.")
