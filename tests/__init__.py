@@ -21,3 +21,4 @@
 
 from tests.config import *
 from tests.db import *
+from tests.model import *
